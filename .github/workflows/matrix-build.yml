@@ -6,8 +6,6 @@ on:
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
-  # Trigger on repository creation
-  repository_dispatch:
 
 jobs:
   build:
