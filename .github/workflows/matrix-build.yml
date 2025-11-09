@@ -1,58 +1,42 @@
-name: Multi-Platform Matrix Build
+name: Matrix Build with Artifacts
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
-  # Auto-trigger on workflow file changes
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }} with Python ${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
-    
+    name: Build on Node v${{ matrix.node }}
+    runs-on: ubuntu-latest
+
     strategy:
-      fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            python-version: '3.9'
-            variant: ubuntu-39
-          - os: macos-latest
-            python-version: '3.10'
-            variant: macos-310
-          - os: windows-latest
-            python-version: '3.11'
-            variant: windows-311
-    
+        node: [14, 16, 18]   # Three variants
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: ${{ matrix.python-version }}
-      
+          node-version: ${{ matrix.node }}
+
       - name: matrix-5566316
-        run: python -c "import sys, subprocess; print('Building for OS: ${{ matrix.os }}'); print('Python version: ${{ matrix.python-version }}'); print('Variant: ${{ matrix.variant }}'); print('Python:', subprocess.check_output([sys.executable, '--version'], text=True).strip())"
-      
+        run: echo "Building for Node version ${{ matrix.node }}"
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Generate build artifact
         run: |
-          python -c "import sys, subprocess; v=subprocess.check_output([sys.executable, '--version'], text=True).strip(); open('build-output.txt','w').write(f'Build output for OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }}\nVariant: ${{ matrix.variant }}\nBuild ID: ${{ github.run_id }}\nBuild Number: ${{ github.run_number }}\nCommit SHA: ${{ github.sha }}\nRunner OS: ${{ runner.os }}\nPython version: {v}\n')"
-      
-      - name: Create JSON artifact
-        run: |
-          python -c "import json; json.dump({'os':'${{ matrix.os }}','python_version':'${{ matrix.python-version }}','variant':'${{ matrix.variant }}','build_id':'${{ github.run_id }}','build_number':'${{ github.run_number }}','commit_sha':'${{ github.sha }}','runner_os':'${{ runner.os }}'}, open('build-info.json','w'), indent=2)"
-      
+          echo "Build output for Node v${{ matrix.node }}" > build-output.txt
+          echo "Timestamp: $(date)" >> build-output.txt
+          echo "Built on $(uname -a)" >> build-output.txt
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-5566316-${{ matrix.variant }}
-          path: |
-            build-output.txt
-            build-info.json
-          retention-days: 30
-
+          name: build-5566316-v${{ matrix.node }}
+          path: build-output.txt
