@@ -1,0 +1,9 @@
+{
+    "name": "diff-matrix-build",
+    "version": "1.0.0",
+    "description": "Demo project for matrix build with artifacts",
+    "scripts": {
+      "build": "echo Building project..."
+    }
+  }
+  
