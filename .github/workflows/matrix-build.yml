@@ -36,57 +36,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
       
       - name: matrix-5566316
-        run: |
-          echo "Building for OS: ${{ matrix.os }}"
-          echo "Python version: ${{ matrix.python-version }}"
-          echo "Variant: ${{ matrix.variant }}"
-          echo "Build timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+        run: python -c "import sys, subprocess; print('Building for OS: ${{ matrix.os }}'); print('Python version: ${{ matrix.python-version }}'); print('Variant: ${{ matrix.variant }}'); print('Python:', subprocess.check_output([sys.executable, '--version'], text=True).strip())"
       
       - name: Generate build artifact
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            echo "Build output for OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }}" > build-output.txt
-            echo "Variant: ${{ matrix.variant }}" >> build-output.txt
-            echo "Build ID: ${{ github.run_id }}" >> build-output.txt
-            echo "Build Number: ${{ github.run_number }}" >> build-output.txt
-            echo "Commit SHA: ${{ github.sha }}" >> build-output.txt
-            echo "Runner OS: ${{ runner.os }}" >> build-output.txt
-            python --version >> build-output.txt
-          else
-            echo "Build output for OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }}" > build-output.txt
-            echo "Variant: ${{ matrix.variant }}" >> build-output.txt
-            echo "Build ID: ${{ github.run_id }}" >> build-output.txt
-            echo "Build Number: ${{ github.run_number }}" >> build-output.txt
-            echo "Commit SHA: ${{ github.sha }}" >> build-output.txt
-            echo "Runner OS: ${{ runner.os }}" >> build-output.txt
-            python --version >> build-output.txt
-          fi
+          python -c "import sys, subprocess; v=subprocess.check_output([sys.executable, '--version'], text=True).strip(); open('build-output.txt','w').write(f'Build output for OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }}\nVariant: ${{ matrix.variant }}\nBuild ID: ${{ github.run_id }}\nBuild Number: ${{ github.run_number }}\nCommit SHA: ${{ github.sha }}\nRunner OS: ${{ runner.os }}\nPython version: {v}\n')"
       
       - name: Create JSON artifact
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            echo { > build-info.json
-            echo   "os": "${{ matrix.os }}", >> build-info.json
-            echo   "python_version": "${{ matrix.python-version }}", >> build-info.json
-            echo   "variant": "${{ matrix.variant }}", >> build-info.json
-            echo   "build_id": "${{ github.run_id }}", >> build-info.json
-            echo   "build_number": "${{ github.run_number }}", >> build-info.json
-            echo   "commit_sha": "${{ github.sha }}", >> build-info.json
-            echo   "runner_os": "${{ runner.os }}" >> build-info.json
-            echo } >> build-info.json
-          else
-            cat > build-info.json << EOF
-          {
-            "os": "${{ matrix.os }}",
-            "python_version": "${{ matrix.python-version }}",
-            "variant": "${{ matrix.variant }}",
-            "build_id": "${{ github.run_id }}",
-            "build_number": "${{ github.run_number }}",
-            "commit_sha": "${{ github.sha }}",
-            "runner_os": "${{ runner.os }}"
-          }
-          EOF
-          fi
+          python -c "import json; json.dump({'os':'${{ matrix.os }}','python_version':'${{ matrix.python-version }}','variant':'${{ matrix.variant }}','build_id':'${{ github.run_id }}','build_number':'${{ github.run_number }}','commit_sha':'${{ github.sha }}','runner_os':'${{ runner.os }}'}, open('build-info.json','w'), indent=2)"
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
